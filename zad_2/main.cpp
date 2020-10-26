@@ -13,6 +13,7 @@ struct line {
     point begin;
     point end;
     Gdk::RGBA color;
+    double width;
 };
 
 struct drawingData {
@@ -35,6 +36,9 @@ Gtk::Label* lPy = nullptr;
 Gtk::ColorButton* cbLine1 = nullptr;
 Gtk::ColorButton* cbLine2 = nullptr;
 
+Gtk::SpinButton* spbLine1 = nullptr;
+Gtk::SpinButton* spbLine2 = nullptr;
+
 Gtk::DrawingArea* visualizationArea = nullptr;
 drawingData visualizationData_obj;
 drawingData* visualizationData = &visualizationData_obj;
@@ -53,13 +57,13 @@ static bool on_draw(const ::Cairo::RefPtr< ::Cairo::Context>& visualization) {
     Gdk::RGBA rgbaLine2 = visualizationData->line2.color;
 
     visualization->set_source_rgb(rgbaLine1.get_red(), rgbaLine1.get_green(), rgbaLine1.get_blue());
-    visualization->set_line_width(2.0);
+    visualization->set_line_width(visualizationData->line1.width);
     visualization->move_to(A.y, visualizationArea->get_height() - A.x);
     visualization->line_to(B.y, visualizationArea->get_height() - B.x);
     visualization->stroke();
 
     visualization->set_source_rgb(rgbaLine2.get_red(), rgbaLine2.get_green(), rgbaLine2.get_blue());
-    visualization->set_line_width(2.0);
+    visualization->set_line_width(visualizationData->line2.width);
     visualization->move_to(C.y, visualizationArea->get_height() - C.x);
     visualization->line_to(D.y, visualizationArea->get_height() - D.x);
     visualization->stroke();
@@ -140,6 +144,9 @@ static void on_compute_clicked() {
     visualizationData->line1.color = cbLine1->get_rgba();
     visualizationData->line2.color = cbLine2->get_rgba();
 
+    visualizationData->line1.width = spbLine1->get_value();
+    visualizationData->line2.width = spbLine2->get_value();
+
     double t = ((C.x - A.x) * (D.y - C.y) - (C.y - A.y) * (D.x - C.x)) /
         ((B.x - A.x) * (D.y - C.y) - (B.y - A.y) * (D.x - C.x));
 
@@ -177,6 +184,9 @@ int main(int argc, char *argv[]) {
 
     builder->get_widget("line1", cbLine1);
     builder->get_widget("line2", cbLine2);
+
+    builder->get_widget("line1_width", spbLine1);
+    builder->get_widget("line2_width", spbLine2);
 
     builder->get_widget("drawing_area", visualizationArea);
 
