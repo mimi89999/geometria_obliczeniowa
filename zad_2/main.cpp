@@ -4,6 +4,22 @@
 #include <unistd.h>
 
 
+struct point {
+    long double x;
+    long double y;
+};
+
+struct line {
+    point begin;
+    point end;
+    Gdk::RGBA color;
+};
+
+struct drawingData {
+    line line1;
+    line line2;
+};
+
 Gtk::Entry* eAx = nullptr;
 Gtk::Entry* eAy = nullptr;
 Gtk::Entry* eBx = nullptr;
@@ -20,11 +36,36 @@ Gtk::ColorButton* cbLine1 = nullptr;
 Gtk::ColorButton* cbLine2 = nullptr;
 
 Gtk::DrawingArea* visualizationArea = nullptr;
+drawingData visualizationData_obj;
+drawingData* visualizationData = &visualizationData_obj;
 
-struct point {
-    long double x;
-    long double y;
-};
+static bool on_draw(const ::Cairo::RefPtr< ::Cairo::Context>& visualization) {
+    if (visualizationData == nullptr) {
+        return true;
+    }
+
+    point A = visualizationData->line1.begin;
+    point B = visualizationData->line1.end;
+    point C = visualizationData->line2.begin;
+    point D = visualizationData->line2.end;
+
+    Gdk::RGBA rgbaLine1 = visualizationData->line1.color;
+    Gdk::RGBA rgbaLine2 = visualizationData->line2.color;
+
+    visualization->set_source_rgb(rgbaLine1.get_red(), rgbaLine1.get_green(), rgbaLine1.get_blue());
+    visualization->set_line_width(2.0);
+    visualization->move_to(A.y, visualizationArea->get_height() - A.x);
+    visualization->line_to(B.y, visualizationArea->get_height() - B.x);
+    visualization->stroke();
+
+    visualization->set_source_rgb(rgbaLine2.get_red(), rgbaLine2.get_green(), rgbaLine2.get_blue());
+    visualization->set_line_width(2.0);
+    visualization->move_to(C.y, visualizationArea->get_height() - C.x);
+    visualization->line_to(D.y, visualizationArea->get_height() - D.x);
+    visualization->stroke();
+
+    return true;
+}
 
 static void on_compute_clicked() {
     eAx->get_style_context()->remove_class("error");
@@ -49,6 +90,7 @@ static void on_compute_clicked() {
         eAy->get_style_context()->add_class("error");
         return;
     }
+    visualizationData->line1.begin = A;
 
     point B;
     try {
@@ -63,6 +105,7 @@ static void on_compute_clicked() {
         eBy->get_style_context()->add_class("error");
         return;
     }
+    visualizationData->line1.end = B;
 
     point C;
     try {
@@ -77,6 +120,7 @@ static void on_compute_clicked() {
         eCy->get_style_context()->add_class("error");
         return;
     }
+    visualizationData->line2.begin = C;
 
     point D;
     try {
@@ -91,6 +135,10 @@ static void on_compute_clicked() {
         eDy->get_style_context()->add_class("error");
         return;
     }
+    visualizationData->line2.end = D;
+
+    visualizationData->line1.color = cbLine1->get_rgba();
+    visualizationData->line2.color = cbLine2->get_rgba();
 
     double t = ((C.x - A.x) * (D.y - C.y) - (C.y - A.y) * (D.x - C.x)) /
         ((B.x - A.x) * (D.y - C.y) - (B.y - A.y) * (D.x - C.x));
@@ -98,18 +146,7 @@ static void on_compute_clicked() {
     lPx->set_text(std::to_string(A.x + t * (B.x - A.x)));
     lPy->set_text(std::to_string(A.y + t * (B.y - A.y)));
 
-    Cairo::RefPtr<Cairo::Context> visualization = visualizationArea->get_window()->create_cairo_context();
-    Gdk::RGBA rgbaLine1 = cbLine1->get_rgba();
-    visualization->set_source_rgb(rgbaLine1.get_red(), rgbaLine1.get_green(), rgbaLine1.get_blue());
-    visualization->set_line_width(2.0);
-    visualization->move_to(A.y, visualizationArea->get_height() - A.x);
-    visualization->line_to(B.y, visualizationArea->get_height() - B.x);
-    visualization->stroke();
-    Gdk::RGBA rgbaLine2 = cbLine2->get_rgba();
-    visualization->set_source_rgb(rgbaLine2.get_red(), rgbaLine2.get_green(), rgbaLine2.get_blue());
-    visualization->move_to(C.y, visualizationArea->get_height() - C.x);
-    visualization->line_to(D.y, visualizationArea->get_height() - D.x);
-    visualization->stroke();
+    visualizationArea->signal_draw().connect( sigc::ptr_fun(on_draw) );
 }
 
 int main(int argc, char *argv[]) {
