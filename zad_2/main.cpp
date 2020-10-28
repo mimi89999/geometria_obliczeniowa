@@ -174,6 +174,7 @@ static void on_compute_clicked() {
     lPy->set_text(std::to_string(A.y + t * (B.y - A.y)));
 
     visualizationArea->signal_draw().connect( sigc::ptr_fun(on_draw) );
+    visualizationArea->queue_draw();
 }
 
 int main(int argc, char *argv[]) {
