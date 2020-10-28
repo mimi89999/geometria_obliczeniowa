@@ -48,6 +48,16 @@ Gtk::DrawingArea* visualizationArea = nullptr;
 drawingData visualizationData_obj;
 drawingData* visualizationData = &visualizationData_obj;
 
+static void on_visualization_config() {
+    visualizationData->line1.color = cbLine1->get_rgba();
+    visualizationData->line2.color = cbLine2->get_rgba();
+
+    visualizationData->line1.width = spbLine1->get_value();
+    visualizationData->line2.width = spbLine2->get_value();
+
+    visualizationArea->queue_draw();
+}
+
 static void on_import_clicked() {
     std::ifstream input_file(fcbImport->get_filename());
     Json::Value input_json;
@@ -215,6 +225,12 @@ int main(int argc, char *argv[]) {
     builder->get_widget("drawing_area", visualizationArea);
 
     fcbImport->signal_file_set().connect( sigc::ptr_fun(on_import_clicked) );
+
+    cbLine1->signal_color_set().connect( sigc::ptr_fun(on_visualization_config) );
+    cbLine2->signal_color_set().connect( sigc::ptr_fun(on_visualization_config) );
+
+    spbLine1->signal_value_changed().connect( sigc::ptr_fun(on_visualization_config) );
+    spbLine2->signal_value_changed().connect( sigc::ptr_fun(on_visualization_config) );
 
     return app->run(*window);
 }
