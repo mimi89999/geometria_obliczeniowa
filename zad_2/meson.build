@@ -10,6 +10,7 @@ project('zad_2', 'cpp',
 gnome = import('gnome')
 
 gtkmm = dependency('gtkmm-3.0')
+jsoncpp = dependency('jsoncpp')
 
 add_project_arguments('-fanalyzer', language : 'cpp')
 
@@ -18,4 +19,4 @@ sources = files('main.cpp')
 gresources = gnome.compile_resources('gresources', 'main.gresource.xml')
 
 executable(meson.project_name(), sources, gresources,
-	dependencies: gtkmm, install: true)
+	dependencies: [gtkmm, jsoncpp], install: true)

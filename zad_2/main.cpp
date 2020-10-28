@@ -1,4 +1,6 @@
 #include <gtkmm.h>
+#include <json/json.h>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <unistd.h>
@@ -30,6 +32,9 @@ Gtk::Entry* eCy = nullptr;
 Gtk::Entry* eDx = nullptr;
 Gtk::Entry* eDy = nullptr;
 
+Gtk::FileChooserButton* fcbImport = nullptr;
+Gtk::FileChooserButton* fcbExport = nullptr;
+
 Gtk::Label* lPx = nullptr;
 Gtk::Label* lPy = nullptr;
 
@@ -42,6 +47,21 @@ Gtk::SpinButton* spbLine2 = nullptr;
 Gtk::DrawingArea* visualizationArea = nullptr;
 drawingData visualizationData_obj;
 drawingData* visualizationData = &visualizationData_obj;
+
+static void on_import_clicked() {
+    std::ifstream input_file(fcbImport->get_filename());
+    Json::Value input_json;
+    input_file >> input_json;
+
+    eAx->set_text(input_json["A"]["x"].asString());
+    eAy->set_text(input_json["A"]["y"].asString());
+    eBx->set_text(input_json["B"]["x"].asString());
+    eBy->set_text(input_json["B"]["y"].asString());
+    eCx->set_text(input_json["C"]["x"].asString());
+    eCy->set_text(input_json["C"]["y"].asString());
+    eDx->set_text(input_json["D"]["x"].asString());
+    eDy->set_text(input_json["D"]["y"].asString());
+}
 
 static bool on_draw(const ::Cairo::RefPtr< ::Cairo::Context>& visualization) {
     if (visualizationData == nullptr) {
@@ -179,6 +199,9 @@ int main(int argc, char *argv[]) {
     builder->get_widget("dx", eDx);
     builder->get_widget("dy", eDy);
 
+    builder->get_widget("import", fcbImport);
+    builder->get_widget("export", fcbExport);
+
     builder->get_widget("px", lPx);
     builder->get_widget("py", lPy);
 
@@ -189,6 +212,8 @@ int main(int argc, char *argv[]) {
     builder->get_widget("line2_width", spbLine2);
 
     builder->get_widget("drawing_area", visualizationArea);
+
+    fcbImport->signal_file_set().connect( sigc::ptr_fun(on_import_clicked) );
 
     return app->run(*window);
 }
