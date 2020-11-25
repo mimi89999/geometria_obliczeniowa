@@ -89,11 +89,11 @@ static bool on_draw(const ::Cairo::RefPtr< ::Cairo::Context>& visualization) {
 
     long double xmin = std::min(std::min(A.x, B.x), std::min(C.x, D.x));
     long double xmax = std::max(std::max(A.x, B.x), std::max(C.x, D.x));
-    long double xratio = (xmax - xmin) / visualizationArea->get_height();
+    long double xratio = (xmax - xmin) / (visualizationArea->get_height() - 15);
 
     long double ymin = std::min(std::min(A.y, B.y), std::min(C.y, D.y));
     long double ymax = std::max(std::max(A.y, B.y), std::max(C.y, D.y));
-    long double yratio = (ymax - ymin) / visualizationArea->get_width();
+    long double yratio = (ymax - ymin) / (visualizationArea->get_width() - 15);
 
     long double scale = 1 / std::max(xratio, yratio);
 
@@ -107,6 +107,24 @@ static bool on_draw(const ::Cairo::RefPtr< ::Cairo::Context>& visualization) {
     visualization->set_line_width(visualizationData->line2.width);
     visualization->move_to((C.y - ymin) * scale, visualizationArea->get_height() - (C.x - xmin) * scale);
     visualization->line_to((D.y - ymin) * scale, visualizationArea->get_height() - (D.x - xmin) * scale);
+    visualization->stroke();
+
+    visualization->set_font_size(18);
+    visualization->set_source_rgb(0, 0, 0);
+    visualization->move_to((A.y - ymin) * scale, visualizationArea->get_height() - (A.x - xmin) * scale);
+    visualization->show_text("A");
+    visualization->move_to((B.y - ymin) * scale, visualizationArea->get_height() - (B.x - xmin) * scale);
+    visualization->show_text("B");
+    visualization->move_to((C.y - ymin) * scale, visualizationArea->get_height() - (C.x - xmin) * scale);
+    visualization->show_text("C");
+    visualization->move_to((D.y - ymin) * scale, visualizationArea->get_height() - (D.x - xmin) * scale);
+    visualization->show_text("D");
+    visualization->move_to((D.y - ymin) * scale, visualizationArea->get_height() - (D.x - xmin) * scale);
+
+    double t = ((C.x - A.x) * (D.y - C.y) - (C.y - A.y) * (D.x - C.x)) /
+        ((B.x - A.x) * (D.y - C.y) - (B.y - A.y) * (D.x - C.x));
+    visualization->move_to((A.y + t * (B.y - A.y) - ymin) * scale, visualizationArea->get_height() - (A.x + t * (B.x - A.x) - xmin) * scale);
+    visualization->show_text("P");
     visualization->stroke();
 
     return true;
