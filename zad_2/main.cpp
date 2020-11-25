@@ -1,5 +1,6 @@
 #include <gtkmm.h>
 #include <json/json.h>
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -86,16 +87,26 @@ static bool on_draw(const ::Cairo::RefPtr< ::Cairo::Context>& visualization) {
     Gdk::RGBA rgbaLine1 = visualizationData->line1.color;
     Gdk::RGBA rgbaLine2 = visualizationData->line2.color;
 
+    long double xmin = std::min(std::min(A.x, B.x), std::min(C.x, D.x));
+    long double xmax = std::max(std::max(A.x, B.x), std::max(C.x, D.x));
+    long double xratio = (xmax - xmin) / visualizationArea->get_height();
+
+    long double ymin = std::min(std::min(A.y, B.y), std::min(C.y, D.y));
+    long double ymax = std::max(std::max(A.y, B.y), std::max(C.y, D.y));
+    long double yratio = (ymax - ymin) / visualizationArea->get_width();
+
+    long double scale = 1 / std::max(xratio, yratio);
+
     visualization->set_source_rgb(rgbaLine1.get_red(), rgbaLine1.get_green(), rgbaLine1.get_blue());
     visualization->set_line_width(visualizationData->line1.width);
-    visualization->move_to(A.y, visualizationArea->get_height() - A.x);
-    visualization->line_to(B.y, visualizationArea->get_height() - B.x);
+    visualization->move_to((A.y - ymin) * scale, visualizationArea->get_height() - (A.x - xmin) * scale);
+    visualization->line_to((B.y - ymin) * scale, visualizationArea->get_height() - (B.x - xmin) * scale);
     visualization->stroke();
 
     visualization->set_source_rgb(rgbaLine2.get_red(), rgbaLine2.get_green(), rgbaLine2.get_blue());
     visualization->set_line_width(visualizationData->line2.width);
-    visualization->move_to(C.y, visualizationArea->get_height() - C.x);
-    visualization->line_to(D.y, visualizationArea->get_height() - D.x);
+    visualization->move_to((C.y - ymin) * scale, visualizationArea->get_height() - (C.x - xmin) * scale);
+    visualization->line_to((D.y - ymin) * scale, visualizationArea->get_height() - (D.x - xmin) * scale);
     visualization->stroke();
 
     return true;
